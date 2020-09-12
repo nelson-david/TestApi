@@ -1,5 +1,5 @@
 from app import app
-from flask import render_template, request, jsonify
+from flask import render_template, request, jsonify, redirect, url_for
 
 import requests
 import json
@@ -19,8 +19,16 @@ def home():
         return res.json()
     return render_template("index.html")
 
-@app.route("/current_user", methods=['POST', 'GET'])
+@app.route("/current_user")
 def get_current_user():
     res = requests.get(BASE_URL+'/user')
     print(res.json())
+    return res.json()
+
+@app.route("/logout")
+def logout():
+    res = requests.get(BASE_URL+'/logout')
+    print(res.json())
+    if res.json()['message']:
+        return redirect(url_for('home'))
     return res.json()

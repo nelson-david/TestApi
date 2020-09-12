@@ -1,7 +1,7 @@
 from flask import request
 from app import app, db, bcrypt, api
 from app.models import Users
-from flask_login import current_user, login_user
+from flask_login import current_user, login_user, login_required, logout_user
 from flask_restful import Resource, abort, fields, marshal_with
 
 user_fields = {
@@ -39,7 +39,7 @@ class User(Resource):
     @marshal_with(user_fields)
     def post(self):
         if current_user.is_authenticated:
-            return {'message':'already authenticated'}
+            abort(404, message='already authenticated')
         args = request.get_json()
         user = check_user(args['username'])
         if user and check_password(user.password, args['password']):
@@ -49,10 +49,17 @@ class User(Resource):
         abort(404, message="User does not exist")
 
     @marshal_with(user_fields)
+    @login_required
+    def get(self):
+        return current_user
+
+class Logout(Resource):
     def get(self):
         if current_user.is_authenticated:
-            return current_user
-        abort(404, message="Not yet authenticated to view this page")
+            logout_user()
+            return {'message':'logout successful'}
+        abort(404, message="Not yet logged in")
 
 
 api.add_resource(User, "/user")
+api.add_resource(Logout, "/logout")
